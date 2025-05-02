@@ -13,6 +13,20 @@ import com.google.android.material.textfield.TextInputEditText;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
+import androidx.annotation.NonNull;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Date;
 
 public class CreateAppointmentActivity extends AppCompatActivity {
 
@@ -27,6 +41,12 @@ public class CreateAppointmentActivity extends AppCompatActivity {
     private SimpleDateFormat dateFormatter;
     private SimpleDateFormat timeFormatter;
 
+    private List<String> patientNames = new ArrayList<>();
+    private List<String> patientIds = new ArrayList<>();
+    private String selectedPatientId = null;
+    private FirebaseFirestore db;
+    private FirebaseAuth auth;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -35,6 +55,9 @@ public class CreateAppointmentActivity extends AppCompatActivity {
         calendar = Calendar.getInstance();
         dateFormatter = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
         timeFormatter = new SimpleDateFormat("HH:mm", Locale.getDefault());
+
+        db = FirebaseFirestore.getInstance();
+        auth = FirebaseAuth.getInstance();
 
         initializeViews();
         setupPatientSpinner();
@@ -53,11 +76,32 @@ public class CreateAppointmentActivity extends AppCompatActivity {
     }
 
     private void setupPatientSpinner() {
-        // TODO: Replace with actual patient list from database
-        String[] patients = {"John Doe", "Jane Smith", "Mike Johnson"};
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_dropdown_item_1line, patients);
-        spinnerPatient.setAdapter(adapter);
+        // Fetch patients from Firestore
+        db.collection("users")
+                .whereEqualTo("role", "patient")
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            patientNames.clear();
+                            patientIds.clear();
+                            for (QueryDocumentSnapshot snapshot : task.getResult()) {
+                                String name = snapshot.getString("name");
+                                String id = snapshot.getId();
+                                patientNames.add(name);
+                                patientIds.add(id);
+                            }
+                            ArrayAdapter<String> adapter = new ArrayAdapter<>(CreateAppointmentActivity.this,
+                                    android.R.layout.simple_dropdown_item_1line, patientNames);
+                            spinnerPatient.setAdapter(adapter);
+                        }
+                    }
+                });
+
+        spinnerPatient.setOnItemClickListener((parent, view, position, id) -> {
+            selectedPatientId = patientIds.get(position);
+        });
     }
 
     private void setupDatePicker() {
@@ -134,11 +178,70 @@ public class CreateAppointmentActivity extends AppCompatActivity {
     }
 
     private void saveAppointment() {
-        // TODO: Implement the actual appointment saving logic here
-        // This could involve saving to a local database or sending to a server
+        // Get doctor ID
+        FirebaseUser user = auth.getCurrentUser();
+        if (user == null) {
+            Toast.makeText(this, "User not authenticated", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String doctorId = user.getUid();
 
-        // For now, just show a success message
-        Toast.makeText(this, "Appointment created successfully", Toast.LENGTH_SHORT).show();
-        finish();
+        // Get patient ID
+        if (selectedPatientId == null) {
+            int pos = patientNames.indexOf(spinnerPatient.getText().toString());
+            if (pos != -1) {
+                selectedPatientId = patientIds.get(pos);
+            } else {
+                Toast.makeText(this, "Invalid patient selected", Toast.LENGTH_SHORT).show();
+                return;
+            }
+        }
+
+        // Get date and time
+        String dateStr = etDate.getText().toString();
+        String timeStr = etTime.getText().toString();
+        String purpose = etPurpose.getText().toString();
+        String notes = etNotes.getText() != null ? etNotes.getText().toString() : "";
+
+        // Combine date and time into a Date object
+        java.util.Date dateTime;
+        try {
+            SimpleDateFormat fullFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
+            dateTime = fullFormat.parse(dateStr + " " + timeStr);
+            
+            // Verify the date is not in the past
+            if (dateTime.before(new Date())) {
+                Toast.makeText(this, "Cannot create appointment in the past", Toast.LENGTH_SHORT).show();
+                return;
+            }
+        } catch (Exception e) {
+            Toast.makeText(this, "Invalid date/time format", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Prepare appointment data
+        Map<String, Object> appointment = new HashMap<>();
+        appointment.put("doctorId", doctorId);
+        appointment.put("patientId", selectedPatientId);
+        appointment.put("dateTime", dateTime);
+        appointment.put("reason", purpose);
+        appointment.put("notes", notes);
+        appointment.put("status", "scheduled"); // Add status field
+        appointment.put("createdAt", new Date()); // Add creation timestamp
+
+        // Save to Firestore
+        db.collection("appointment")
+                .add(appointment)
+                .addOnSuccessListener(documentReference -> {
+                    Toast.makeText(CreateAppointmentActivity.this, 
+                            "Appointment created successfully for " + dateFormatter.format(dateTime), 
+                            Toast.LENGTH_SHORT).show();
+                    finish();
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(CreateAppointmentActivity.this, 
+                            "Failed to create appointment: " + e.getMessage(), 
+                            Toast.LENGTH_SHORT).show();
+                });
     }
 }

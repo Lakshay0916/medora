@@ -7,12 +7,17 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.med.models.Appointment;
 import com.example.med.models.Doctor;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -23,44 +28,66 @@ public class PatientAppointmentsActivity extends AppCompatActivity {
     private RecyclerView recyclerViewAppointments;
     private AppointmentAdapter appointmentAdapter;
     private List<Appointment> appointmentList;
-    private String patientId = "1"; // In a real app, this would come from user authentication
+    private FirebaseFirestore db;
+    private FirebaseAuth auth;
+    private String patientId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_patient_appointments);
 
+        // Initialize Firebase
+        db = FirebaseFirestore.getInstance();
+        auth = FirebaseAuth.getInstance();
+        FirebaseUser user = auth.getCurrentUser();
+        if (user == null) {
+            Toast.makeText(this, "User not authenticated", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+        patientId = user.getUid();
+
         // Initialize RecyclerView
         recyclerViewAppointments = findViewById(R.id.recyclerViewAppointments);
         recyclerViewAppointments.setLayoutManager(new LinearLayoutManager(this));
 
-        // Get appointments for this patient
-        appointmentList = getPatientAppointments(patientId);
-
-        // Set up adapter
+        // Initialize appointment list
+        appointmentList = new ArrayList<>();
         appointmentAdapter = new AppointmentAdapter(appointmentList);
         recyclerViewAppointments.setAdapter(appointmentAdapter);
     }
 
-    private List<Appointment> getPatientAppointments(String patientId) {
-        List<Appointment> appointments = new ArrayList<>();
+    @Override
+    protected void onStart() {
+        super.onStart();
+        fetchAppointments();
+    }
 
-        // Create some dummy appointments for this patient
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
+    private void fetchAppointments() {
+        db.collection("appointment")
+                .whereEqualTo("patientId", patientId)
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        appointmentList.clear();
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            String id = document.getId();
+                            String doctorId = document.getString("doctorId");
+                            Date dateTime = document.getDate("dateTime");
+                            String reason = document.getString("reason");
+                            String notes = document.getString("notes");
 
-        try {
-            Date date1 = dateFormat.parse("2023-06-15 10:30");
-            Date date2 = dateFormat.parse("2023-06-20 14:00");
-            Date date3 = dateFormat.parse("2023-06-25 09:15");
-
-            appointments.add(new Appointment("1", patientId, "1", date1, "Regular Checkup"));
-            appointments.add(new Appointment("2", patientId, "1", date2, "Follow-up Consultation"));
-            appointments.add(new Appointment("3", patientId, "2", date3, "Specialist Review"));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return appointments;
+                            if (dateTime != null) {
+                                Appointment appointment = new Appointment(id, patientId, doctorId, dateTime, reason);
+                                appointmentList.add(appointment);
+                            }
+                        }
+                        appointmentAdapter.notifyDataSetChanged();
+                    } else {
+                        Toast.makeText(this, "Failed to fetch appointments", Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 
     private class AppointmentAdapter extends RecyclerView.Adapter<AppointmentAdapter.AppointmentViewHolder> {
@@ -83,10 +110,17 @@ public class PatientAppointmentsActivity extends AppCompatActivity {
         public void onBindViewHolder(@NonNull AppointmentViewHolder holder, int position) {
             Appointment appointment = appointments.get(position);
 
-            // Get doctor name from ID (in a real app, this would come from a database)
-            String doctorName = getDoctorName(appointment.getDoctorId());
+            // Fetch doctor name from Firestore
+            db.collection("users").document(appointment.getDoctorId())
+                    .get()
+                    .addOnSuccessListener(documentSnapshot -> {
+                        if (documentSnapshot.exists()) {
+                            String doctorName = documentSnapshot.getString("name");
+                            String specialization = documentSnapshot.getString("specialization");
+                            holder.tvPatientName.setText("Dr. " + doctorName + " - " + specialization);
+                        }
+                    });
 
-            holder.tvPatientName.setText("Dr. " + doctorName);
             holder.tvAppointmentTime.setText(dateFormat.format(appointment.getDateTime()));
             holder.tvAppointmentReason.setText(appointment.getReason());
 
@@ -95,8 +129,6 @@ public class PatientAppointmentsActivity extends AppCompatActivity {
             holder.btnViewPatient.setContentDescription("View Doctor");
 
             holder.btnViewPatient.setOnClickListener(v -> {
-                // In a real app, this would navigate to the doctor's profile
-                // For now, we'll just show a toast or navigate to a placeholder
                 Intent intent = new Intent(PatientAppointmentsActivity.this, DoctorProfileActivity.class);
                 intent.putExtra("doctorId", appointment.getDoctorId());
                 startActivity(intent);
@@ -120,20 +152,5 @@ public class PatientAppointmentsActivity extends AppCompatActivity {
                 btnViewPatient = itemView.findViewById(R.id.btnViewPatient);
             }
         }
-    }
-
-    private String getDoctorName(String doctorId) {
-        // This is just dummy data - in a real app, this would come from a database
-        List<Doctor> doctors = new ArrayList<>();
-        doctors.add(new Doctor("1", "John Smith", "Cardiologist", "john.smith@hospital.com", "+1 (555) 123-4567"));
-        doctors.add(new Doctor("2", "Sarah Johnson", "Dermatologist", "sarah.johnson@hospital.com", "+1 (555) 234-5678"));
-
-        for (Doctor doctor : doctors) {
-            if (doctor.getId().equals(doctorId)) {
-                return doctor.getName();
-            }
-        }
-
-        return "Unknown Doctor";
     }
 }
