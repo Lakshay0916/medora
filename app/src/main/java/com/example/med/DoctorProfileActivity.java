@@ -15,25 +15,46 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import org.w3c.dom.Text;
+
 public class DoctorProfileActivity extends AppCompatActivity {
     private ImageView imgDoctorProfile;
     private TextView tvDoctorName, tvSpecialization, tvEmail, tvPhone, tvExperience, tvEducation, tvCertifications;
-    private String name;
+    private String name, education, email, mobile, specialization, certifications, experience, uid;
 
     @Override
     protected void onStart() {
         super.onStart();
         FirebaseAuth auth = FirebaseAuth.getInstance();
         FirebaseUser user = auth.getCurrentUser();
-        String uid = user.getUid();
+        uid = user.getUid();
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection("users").document(uid).get().addOnSuccessListener(documentSnapshot ->
         {
            if (documentSnapshot.exists()){
                name = documentSnapshot.getString("name");
-               Toast.makeText(DoctorProfileActivity.this,name,Toast.LENGTH_SHORT).show();
+               education = documentSnapshot.getString("education");
+               email = documentSnapshot.getString("email");
+               mobile = documentSnapshot.getString("mobile");
+               specialization = documentSnapshot.getString("specialization");
+               certifications = documentSnapshot.getString("certifications");
+               experience = documentSnapshot.getString("experience");
+//               Toast.makeText(DoctorProfileActivity.this,name,Toast.LENGTH_SHORT).show();
                TextView doctorName = findViewById(R.id.tvDoctorName);
                doctorName.setText(name);
+               TextView specialization1 = findViewById(R.id.tvSpecialization);
+               specialization1.setText(specialization);
+               TextView email1 = findViewById(R.id.tvEmail);
+               email1.setText(email);
+               TextView phone1 = findViewById(R.id.tvPhone);
+               phone1.setText("+91 "+mobile);
+               TextView education1 = findViewById(R.id.tvEducation);
+               education1.setText(education);
+               TextView experience1 = findViewById(R.id.tvExperience);
+               experience1.setText(experience + " years");
+               TextView cert1 = findViewById(R.id.tvCertifications);
+               cert1.setText(certifications);
+
            }
         });
     }
@@ -58,12 +79,12 @@ public class DoctorProfileActivity extends AppCompatActivity {
 
         // Display doctor information
         tvDoctorName.setText(doctor.getName());
-        tvSpecialization.setText(doctor.getSpecialization());
+        tvSpecialization.setText(specialization);
         tvEmail.setText(doctor.getEmail());
         tvPhone.setText(doctor.getPhone());
-        tvExperience.setText("Experience: 15 years");
-        tvEducation.setText("Education: Harvard Medical School");
-        tvCertifications.setText("Certifications: American Board of Cardiology");
+        tvExperience.setText("Experience: " + experience + " years");
+        tvEducation.setText("Education: "+ education);
+        tvCertifications.setText("Certifications: "+ certifications);
 
         Button logoutButton = findViewById(R.id.logout);
         logoutButton.setOnClickListener(new View.OnClickListener() {
@@ -80,6 +101,6 @@ public class DoctorProfileActivity extends AppCompatActivity {
 
     private Doctor getDummyDoctor() {
         // This is just dummy data - in a real app, this would come from a database
-        return new Doctor("1", name, "Cardiologist", "john.smith@hospital.com", "+1 (555) 123-4567");
+        return new Doctor(uid, name, specialization, email, "+91 "+ mobile);
     }
 } 

@@ -2,50 +2,71 @@ package com.example.med;
 
 import android.os.Bundle;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import com.example.med.models.Patient;
-import java.util.ArrayList;
+
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 public class PatientProfileActivity extends AppCompatActivity {
-    private TextView tvName, tvAge, tvGender, tvMedicalHistory;
+    private TextView tvName, tvAge, tvGender, tvMedicalHistory, tvEmail, tvMobile, tvAddress;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_patient_profile);
 
-        // Initialize views
+        // Link UI elements
         tvName = findViewById(R.id.tvName);
         tvAge = findViewById(R.id.tvAge);
         tvGender = findViewById(R.id.tvGender);
         tvMedicalHistory = findViewById(R.id.tvMedicalHistory);
+        tvEmail = findViewById(R.id.tvEmail);
+        tvMobile = findViewById(R.id.tvMobile);
+        tvAddress = findViewById(R.id.tvAddress);
 
-        // Get patient ID from intent
         String patientId = getIntent().getStringExtra("patientId");
 
-        // TODO: In a real app, fetch patient data from a database
-        // For now, we'll use dummy data
-        Patient patient = getDummyPatient(patientId);
-
-        // Display patient information
-        tvName.setText("Name: " + patient.getName());
-        tvAge.setText("Age: " + patient.getAge());
-        tvGender.setText("Gender: " + patient.getGender());
-        tvMedicalHistory.setText("Medical History: " + patient.getMedicalHistory());
-    }
-
-    private Patient getDummyPatient(String patientId) {
-        // This is just dummy data - in a real app, this would come from a database
-        ArrayList<Patient> patients = new ArrayList<>();
-        patients.add(new Patient("1", "John Doe", 35, "Male", "No major health issues"));
-        patients.add(new Patient("2", "Jane Smith", 28, "Female", "Allergic to penicillin"));
-        patients.add(new Patient("3", "Mike Johnson", 45, "Male", "Hypertension"));
-
-        for (Patient patient : patients) {
-            if (patient.getId().equals(patientId)) {
-                return patient;
-            }
+        if (patientId == null || patientId.isEmpty()) {
+            Toast.makeText(this, "Invalid Patient ID", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
         }
-        return patients.get(0); // Return first patient if ID not found
+
+        fetchPatientFromFirestore(patientId);
     }
-} 
+
+    private void fetchPatientFromFirestore(String patientId) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        db.collection("users").document(patientId).get()
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                    @Override
+                    public void onSuccess(DocumentSnapshot document) {
+                        if (document.exists()) {
+                            tvName.setText("Name: " + document.getString("name"));
+                            tvAge.setText("Age: " + document.getString("age"));
+                            tvGender.setText("Gender: " + document.getString("gender"));
+                            tvMedicalHistory.setText("Medical History: " + document.getString("medicalHistory"));
+                            tvEmail.setText("Email: " + document.getString("email"));
+                            tvMobile.setText("Mobile: " + document.getString("mobile"));
+                            tvAddress.setText("Address: " + document.getString("address"));
+                        } else {
+                            Toast.makeText(PatientProfileActivity.this, "Patient not found", Toast.LENGTH_SHORT).show();
+                            finish();
+                        }
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(PatientProfileActivity.this, "Failed to load patient", Toast.LENGTH_SHORT).show();
+                        finish();
+                    }
+                });
+    }
+}

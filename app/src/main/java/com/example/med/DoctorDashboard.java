@@ -45,7 +45,7 @@ public class DoctorDashboard extends AppCompatActivity {
         {
             if (documentSnapshot.exists()){
                 name ="Dr. "+ documentSnapshot.getString("name");
-                Toast.makeText(DoctorDashboard.this,name,Toast.LENGTH_SHORT).show();
+//                Toast.makeText(DoctorDashboard.this,name,Toast.LENGTH_SHORT).show();
                 TextView doctorName = findViewById(R.id.tvDoctorName);
                 doctorName.setText(name);
             }
