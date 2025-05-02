@@ -58,7 +58,6 @@
                 android:background="@null"
                 android:drawablePadding="8dp"
                 android:hint="Search patients..."
-
                 android:padding="8dp" />
 
             <ImageButton
@@ -89,4 +88,4 @@
         android:src="@drawable/calen"
         app:backgroundTint="@android:color/holo_blue_dark" />
 
-</LinearLayout> 
+</LinearLayout>

@@ -1,7 +1,7 @@
 package com.example.med;
 
 import android.app.DatePickerDialog;
-import android.os.Bundle;
+import android.os.Bundle;   
 import android.text.TextUtils;
 import android.util.Patterns;
 import android.widget.ArrayAdapter;
@@ -10,8 +10,14 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
 
 public class AddPatientActivity extends AppCompatActivity {
@@ -60,13 +66,11 @@ public class AddPatientActivity extends AppCompatActivity {
     }
 
     private void setupSpinners() {
-        // Setup Gender Spinner
         String[] genders = {"Male", "Female", "Other"};
         ArrayAdapter<String> genderAdapter = new ArrayAdapter<>(this,
                 android.R.layout.simple_dropdown_item_1line, genders);
         spinnerGender.setAdapter(genderAdapter);
 
-        // Setup Blood Group Spinner
         String[] bloodGroups = {"A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"};
         ArrayAdapter<String> bloodGroupAdapter = new ArrayAdapter<>(this,
                 android.R.layout.simple_dropdown_item_1line, bloodGroups);
@@ -102,31 +106,26 @@ public class AddPatientActivity extends AppCompatActivity {
     private boolean validateForm() {
         boolean isValid = true;
 
-        // Validate First Name
         if (TextUtils.isEmpty(etFirstName.getText())) {
             etFirstName.setError("First name is required");
             isValid = false;
         }
 
-        // Validate Last Name
         if (TextUtils.isEmpty(etLastName.getText())) {
             etLastName.setError("Last name is required");
             isValid = false;
         }
 
-        // Validate Date of Birth
         if (TextUtils.isEmpty(etDateOfBirth.getText())) {
             etDateOfBirth.setError("Date of birth is required");
             isValid = false;
         }
 
-        // Validate Gender
         if (TextUtils.isEmpty(spinnerGender.getText())) {
             spinnerGender.setError("Gender is required");
             isValid = false;
         }
 
-        // Validate Email
         String email = etEmail.getText() != null ? etEmail.getText().toString() : "";
         if (TextUtils.isEmpty(email)) {
             etEmail.setError("Email is required");
@@ -136,7 +135,6 @@ public class AddPatientActivity extends AppCompatActivity {
             isValid = false;
         }
 
-        // Validate Phone
         if (TextUtils.isEmpty(etPhone.getText())) {
             etPhone.setError("Phone number is required");
             isValid = false;
@@ -146,11 +144,63 @@ public class AddPatientActivity extends AppCompatActivity {
     }
 
     private void savePatientData() {
-        // TODO: Implement the actual data saving logic here
-        // This could involve saving to a local database or sending to a server
+        String firstName = etFirstName.getText().toString().trim();
+        String lastName = etLastName.getText().toString().trim();
+        String fullName = firstName + " " + lastName;
+        String email = etEmail.getText().toString().trim();
+        String phone = etPhone.getText().toString().trim();
+        String gender = spinnerGender.getText().toString().trim();
+        String dob = etDateOfBirth.getText().toString().trim();
+        String address = etAddress.getText().toString().trim();
+        String medicalHistory = etMedicalHistory.getText().toString().trim();
+        FirebaseAuth.getInstance().createUserWithEmailAndPassword(email, "123456")
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        String uid = task.getResult().getUser().getUid();
 
-        // For now, just show a success message
-        Toast.makeText(this, "Patient added successfully", Toast.LENGTH_SHORT).show();
-        finish();
+                        HashMap<Object, Object> userMap = new HashMap<>();
+                        userMap.put("name", fullName);
+                        userMap.put("email", email);
+                        userMap.put("mobile", phone);
+                        userMap.put("role", "patient");
+                        userMap.put("gender", gender);
+                        userMap.put("age", String.valueOf(calculateAge(dob)));
+                        userMap.put("address", address);
+                        userMap.put("medicalHistory", medicalHistory);
+                        FirebaseFirestore.getInstance().collection("users")
+                                .document(uid)
+                                .set(userMap)
+                                .addOnSuccessListener(aVoid -> {
+                                    Toast.makeText(this, "Patient added successfully", Toast.LENGTH_SHORT).show();
+                                    finish();
+                                })
+                                .addOnFailureListener(e ->
+                                        Toast.makeText(this, "Failed to add patient to Firestore", Toast.LENGTH_SHORT).show());
+                    } else {
+                        Toast.makeText(this, "Auth failed: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                });
     }
+    private int calculateAge(String dob) {
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+        try {
+            Date dateOfBirth = sdf.parse(dob);
+            Calendar dobCalendar = Calendar.getInstance();
+            dobCalendar.setTime(dateOfBirth);
+
+            Calendar today = Calendar.getInstance();
+
+            int age = today.get(Calendar.YEAR) - dobCalendar.get(Calendar.YEAR);
+
+            if (today.get(Calendar.DAY_OF_YEAR) < dobCalendar.get(Calendar.DAY_OF_YEAR)) {
+                age--;
+            }
+            return age;
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
+
 }

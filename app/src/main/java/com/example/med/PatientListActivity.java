@@ -2,9 +2,12 @@ package com.example.med;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -31,6 +34,7 @@ public class PatientListActivity extends AppCompatActivity {
     private List<Patient> patientList;
     private FloatingActionButton fabAddPatient;
     private String uid;
+    private EditText etSearch;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,15 +45,29 @@ public class PatientListActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         fabAddPatient = findViewById(R.id.fabAddPatient);
+        etSearch = findViewById(R.id.etSearch);
+
         fabAddPatient.setOnClickListener(v -> {
             Intent intent = new Intent(PatientListActivity.this, AddPatientActivity.class);
             startActivity(intent);
         });
 
-        // Initialize empty list and adapter before fetching
         patientList = new ArrayList<>();
         adapter = new PatientAdapter(patientList);
         recyclerView.setAdapter(adapter);
+
+        etSearch.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                adapter.filter(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
     }
 
     @Override
@@ -70,15 +88,17 @@ public class PatientListActivity extends AppCompatActivity {
                         if (task.isSuccessful()) {
                             patientList.clear();
                             for (QueryDocumentSnapshot snapshot : task.getResult()) {
-                                patientList.add(new Patient(
+                                Patient patient = new Patient(
                                         snapshot.getId(),
                                         snapshot.getString("name"),
                                         Integer.parseInt(snapshot.getString("age")),
                                         snapshot.getString("gender"),
                                         snapshot.getString("medicalHistory")
-                                ));
+                                );
+                                patientList.add(patient);
                             }
-                            adapter.notifyDataSetChanged();
+                            adapter = new PatientAdapter(patientList);
+                            recyclerView.setAdapter(adapter);
                         }
                     }
                 });
@@ -86,9 +106,25 @@ public class PatientListActivity extends AppCompatActivity {
 
     private class PatientAdapter extends RecyclerView.Adapter<PatientAdapter.PatientViewHolder> {
         private List<Patient> patients;
+        private List<Patient> allPatients;
 
         public PatientAdapter(List<Patient> patients) {
-            this.patients = patients;
+            this.patients = new ArrayList<>(patients);
+            this.allPatients = new ArrayList<>(patients);
+        }
+
+        public void filter(String text) {
+            patients.clear();
+            if (text.isEmpty()) {
+                patients.addAll(allPatients);
+            } else {
+                for (Patient p : allPatients) {
+                    if (p.getName().toLowerCase().startsWith(text.toLowerCase())) {
+                        patients.add(p);
+                    }
+                }
+            }
+            notifyDataSetChanged();
         }
 
         @NonNull
