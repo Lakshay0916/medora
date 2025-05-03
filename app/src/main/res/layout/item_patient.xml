@@ -61,7 +61,7 @@
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/frame"
+            android:src="@drawable/profile"
             android:contentDescription="View Patient"
             android:padding="12dp"/>
     </LinearLayout>

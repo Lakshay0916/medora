@@ -39,7 +39,6 @@ public class DoctorDashboard extends AppCompatActivity {
     private FirebaseFirestore db;
     private FirebaseAuth auth;
     String name;
-
     @Override
     protected void onStart() {
         super.onStart();
@@ -57,7 +56,7 @@ public class DoctorDashboard extends AppCompatActivity {
             }
         });
 
-        // Fetch today's appointments
+
         fetchTodayAppointments(uid);
     }
 

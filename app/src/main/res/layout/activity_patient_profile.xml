@@ -29,7 +29,7 @@
                     android:layout_width="100dp"
                     android:layout_height="100dp"
                     android:layout_gravity="center_horizontal"
-                    android:src="@drawable/frame"
+                    android:src="@drawable/profile"
                     android:contentDescription="Patient Avatar"
                     android:background="#E0E0E0"
                     android:padding="16dp"/>

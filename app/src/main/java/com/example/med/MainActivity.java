@@ -32,5 +32,8 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+        findViewById(R.id.SignupButton).setOnClickListener(v -> {
+            startActivity(new Intent(MainActivity.this, DoctorSignupActivity.class));
+        });
     }
 }

@@ -3,7 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5">
+    android:background="#F8F9FA"
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -11,12 +12,12 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Header with welcome message -->
+        <!-- Header Card -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="12dp"
+            android:layout_marginBottom="24dp"
+            app:cardCornerRadius="16dp"
             app:cardElevation="4dp"
             app:cardBackgroundColor="@android:color/holo_blue_dark">
 
@@ -24,14 +25,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="20dp">
+                android:padding="24dp">
 
                 <TextView
                     android:id="@+id/tvWelcome"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Welcome Back!"
-                    android:textSize="24sp"
+                    android:textSize="28sp"
                     android:textStyle="bold"
                     android:textColor="#FFFFFF"/>
 
@@ -39,7 +40,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Manage your health information"
-                    android:textSize="14sp"
+                    android:textSize="16sp"
                     android:textColor="#E0E0E0"
                     android:layout_marginTop="8dp"/>
             </LinearLayout>
@@ -50,24 +51,23 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Quick Actions"
-            android:textSize="18sp"
+            android:textSize="20sp"
             android:textStyle="bold"
-            android:layout_marginBottom="12dp"
-            android:layout_marginStart="4dp"/>
+            android:textColor="#333333"
+            android:layout_marginBottom="16dp"/>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:orientation="vertical"
-            android:paddingHorizontal="16dp"> <!-- Optional padding -->
+            android:layout_marginBottom="24dp"
+            android:orientation="vertical">
 
             <!-- Profile Card -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/cardProfile"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
+                android:layout_marginBottom="16dp"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="4dp">
 
@@ -76,20 +76,22 @@
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="24dp"
+                    android:background="?attr/selectableItemBackground">
 
                     <ImageView
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
                         android:contentDescription="Profile Icon"
-                        android:src="@drawable/frame" />
+                        android:src="@drawable/profile" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
+                        android:layout_marginTop="16dp"
                         android:text="Profile"
-                        android:textSize="20sp" />
+                        android:textSize="18sp"
+                        android:textColor="#333333"/>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
@@ -98,7 +100,7 @@
                 android:id="@+id/cardAppointments"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
+                android:layout_marginBottom="16dp"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="4dp">
 
@@ -107,21 +109,24 @@
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="24dp"
+                    android:background="?attr/selectableItemBackground">
 
                     <ImageView
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
                         android:contentDescription="Appointments Icon"
-                        android:src="@drawable/calen" />
+                        android:src="@drawable/calen"
+                       />
 
                     <TextView
                         android:id="@+id/tvAppointmentCount"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="Appointment"
-                        android:textSize="20sp" />
+                        android:layout_marginTop="16dp"
+                        android:text="Appointments"
+                        android:textSize="18sp"
+                        android:textColor="#333333"/>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
@@ -138,64 +143,37 @@
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="24dp"
+                    android:background="?attr/selectableItemBackground">
 
                     <ImageView
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
                         android:contentDescription="Medications Icon"
-                        android:src="@drawable/calen" />
+                        android:src="@drawable/medicine"
+                        />
 
                     <TextView
                         android:id="@+id/tvMedicationCount"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
+                        android:layout_marginTop="16dp"
                         android:text="Medications"
-                        android:textSize="20sp" />
+                        android:textSize="18sp"
+                        android:textColor="#333333"/>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
-
         </LinearLayout>
-
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="24dp">
-
-            <!-- Medical Records Card -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
-                android:layout_weight="1"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="4dp">
-
-
-            </androidx.cardview.widget.CardView>
-        </LinearLayout>
-
-        <!-- Upcoming Appointments Section -->
-
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="4dp"/>
 
         <!-- Health Tips Section -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Health Tips"
-            android:textSize="18sp"
+            android:textSize="20sp"
             android:textStyle="bold"
-            android:layout_marginBottom="12dp"
-            android:layout_marginStart="4dp"/>
+            android:textColor="#333333"
+            android:layout_marginBottom="16dp"/>
 
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
@@ -207,29 +185,23 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="24dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Stay hydrated by drinking at least 8 glasses of water daily."
-                    android:textSize="16sp"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Regular exercise can help improve your overall health."
+                    android:text="Stay hydrated and maintain a balanced diet"
                     android:textSize="16sp"
-                    android:layout_marginTop="8dp"/>
+                    android:textColor="#333333"/>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Get adequate sleep to support your body's recovery."
+                    android:text="Get regular exercise and enough sleep"
                     android:textSize="16sp"
+                    android:textColor="#333333"
                     android:layout_marginTop="8dp"/>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
-
     </LinearLayout>
 </ScrollView>
